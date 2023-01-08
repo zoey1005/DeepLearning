@@ -1,0 +1,100 @@
+---
+title: "Cai"
+author: "paocai"
+date: "12/8/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1 准备图像
+```{R}
+if (!require("png")) {
+  install.packages("png")
+  stopifnot(require("png"))
+  }
+```
+
+```{R}
+library(png)
+cai <- readPNG("~/Downloads/IMG_1841.png")
+red.cai <- cai[,,1] #red color channel
+green.cai <- cai[,,2] #green color channel
+blue.cai <- cai[,,3] #blue color channel
+```
+
+# 2 标准差画法：描绘框架
+```{R}
+#Filter Sd Matrix
+ksd=function(matrix, k){
+  dimension=dim(matrix) #Store the dimensions of the matrix, say, n×m.
+  pad.X <- matrix(0, dimension[1]+2*k, dimension[2]+2*k) #Pad the image with zeros,depending on k.
+  pad.X[(k+1):(dimension[1]+k), (k+1):(dimension[2]+k)] <- matrix
+  pad.X.2 <- matrix(0, dimension[1], dimension[2])
+  for (a in 1:dimension[1]){
+    for (b in 1:dimension[2]){
+      pad.X.2[a,b]<-sd(pad.X[a:(a+2*k), b:(2*k +b)])
+    }
+  }#obtain a sd matrix
+  return(pad.X.2)
+}
+```
+
+```{R}
+#Assemble the three processed matrices into an array
+assemble=function(matrix1, matrix2,matrix3,k){
+  result <- array(c(ksd(matrix1,k),ksd(matrix2,k),ksd(matrix3,k)),dim = c(dim(matrix1)[1],dim(matrix2)[2],3))
+  return(result)
+}
+```
+
+```{R}
+#Use writePNG() function to create USERNAME_k.png, where k is the window size.
+plot=function(result,k){
+  return(writePNG(result,target =sprintf("Qinan_%s.png",k)))
+} 
+
+plot(assemble(red.cai,green.cai,blue.cai,1),1) #Create files USERNAME_1.png
+```
+
+<div align=center>![红绿蓝3个图层叠加（标准差画法）](Qinan_1.png)
+
+# 3 平均数画法：近似原图
+
+```{R}
+#Filter Mean Matrix
+kmean=function(matrix, k){
+  dimension=dim(matrix) #Store the dimensions of the matrix, say, n×m.
+  pad.X <- matrix(0, dimension[1]+2*k, dimension[2]+2*k) #Pad the image with zeros,depending on k.
+  pad.X[(k+1):(dimension[1]+k), (k+1):(dimension[2]+k)] <- matrix
+  pad.X.2 <- matrix(0, dimension[1], dimension[2])
+  for (a in 1:dimension[1]){
+    for (b in 1:dimension[2]){
+      pad.X.2[a,b]<-mean(pad.X[a:(a+2*k), b:(2*k +b)])
+    }
+  }#obtain a mean matrix
+  return(pad.X.2)
+}
+```
+
+```{R}
+#Assemble the three processed matrices into an array
+assemble2=function(matrix1, matrix2,matrix3,k){
+  result <- array(c(kmean(matrix1,k),kmean(matrix2,k),kmean(matrix3,k)),dim = c(dim(matrix1)[1],dim(matrix2)[2],3))
+  return(result)
+}
+```
+
+```{R}
+#Use writePNG() function to create USERNAME_k.png, where k is the window size.
+plot2=function(result,k){
+  return(writePNG(result,target =sprintf("Qinan_%s.png",k)))
+} 
+
+plot2(assemble2(red.cai,green.cai,blue.cai,1),2) #Create files USERNAME_1.png
+
+```
+
+<div align=center>![红绿蓝3个图层叠加（平均数画法）](Qinan_2.png)
